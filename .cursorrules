@@ -1,0 +1,9 @@
+# Cursor Rules
+
+## Code Style
+- NEVER add comments to the code
+- Write clean, self-documenting code without any comments
+- Do not include any comments, even for complex logic
+- Code should be self-explanatory through clear naming and structure
+- NEVER use emojis in code, messages, or any output
+
