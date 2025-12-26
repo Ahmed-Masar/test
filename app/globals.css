@@ -1,0 +1,484 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'SF Pro';
+  src: local('SF Pro Text'), local('SFProText-Regular');
+  font-weight: 510;
+  font-style: normal;
+}
+
+:root {
+  --background: linear-gradient(180deg, #141414 0%, #0E0E0E 100%);
+  --foreground: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: linear-gradient(180deg, #141414 0%, #0E0E0E 100%);
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Input Fields Hover Effects */
+.input-field:hover {
+  border-color: #3a3a3f !important;
+  box-shadow: 0px 0px 0px 3px rgba(0, 109, 230, 0.1),
+              0px 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.input-field:focus {
+  border-color: #006DE6 !important;
+  box-shadow: 0px 0px 0px 3px rgba(0, 109, 230, 0.2),
+              0px 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sign In Button Effects */
+.sign-in-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.sign-in-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.sign-in-button:hover::before {
+  left: 100%;
+}
+
+.sign-in-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0px 4px 12px rgba(5, 155, 253, 0.4),
+              0px 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sign-in-button:active {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0px 1px 3px rgba(5, 155, 253, 0.3) !important;
+}
+
+/* Ripple effect on button click */
+.sign-in-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.sign-in-button:active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 0;
+}
+
+/* Checkbox Hover Effects */
+.checkbox-label:hover .checkbox-box {
+  transform: scale(1.1);
+  box-shadow: 0px 0px 0px 3px rgba(0, 109, 230, 0.15);
+}
+
+.checkbox-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Eye Button Hover Effects */
+.eye-button:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  transform: scale(1.1);
+}
+
+.eye-button:active {
+  transform: scale(0.95);
+}
+
+.eye-button:hover svg {
+  transform: scale(1.05);
+}
+
+.eye-button svg path {
+  transition: fill 0.3s ease;
+}
+
+.eye-button:hover svg path {
+  fill: #B0B0B0 !important;
+}
+
+/* Animated Links with Underline Effect */
+.animated-link {
+  position: relative;
+  display: inline-block;
+}
+
+.animated-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: currentColor;
+  transition: width 0.3s ease;
+}
+
+.animated-link:hover::after {
+  width: 100%;
+}
+
+.animated-link:hover {
+  color: #B0B0B0 !important;
+}
+
+/* Smooth transitions for all interactive elements */
+a, button, input, label {
+  transition: all 0.3s ease;
+}
+
+/* Command Dialog Styles - Overlay with Light Blur */
+[data-radix-dialog-overlay],
+[data-radix-dialog-overlay][data-state="open"],
+div[data-radix-dialog-overlay],
+div[role="dialog"] ~ div[data-radix-dialog-overlay],
+[data-radix-portal] > [data-radix-dialog-overlay],
+[data-radix-portal] > div[data-radix-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: overlayShow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: auto !important;
+  will-change: backdrop-filter, opacity !important;
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+  }
+}
+
+[cmdk-dialog-overlay],
+div[cmdk-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: overlayShow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: auto !important;
+  will-change: backdrop-filter, opacity !important;
+}
+
+/* Force blur on body when dialog is open */
+body:has([data-radix-dialog-overlay][data-state="open"]),
+body:has([cmdk-dialog-overlay]) {
+  overflow: hidden !important;
+}
+
+[data-radix-dialog-content],
+[cmdk-dialog] {
+  background: linear-gradient(135deg, #1A1A1A 0%, #151515 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 48px -12px rgba(0, 0, 0, 0.95),
+    0 48px 96px -24px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.03) !important;
+  max-width: 640px !important;
+  width: 90vw !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  animation: contentShow 250ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 80vh !important;
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Enhanced Input Design */
+[cmdk-input] {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #FFFFFF !important;
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  padding: 16px 20px !important;
+  width: 100% !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+[cmdk-input]::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-weight: 400 !important;
+}
+
+[cmdk-input]:focus {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[cmdk-input]:focus-visible {
+  outline: none !important;
+}
+
+/* List Container with Smooth Scrolling */
+[cmdk-list] {
+  max-height: calc(80vh - 60px) !important;
+  min-height: 200px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 8px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
+  flex: 1 !important;
+}
+
+/* Custom Scrollbar for Webkit browsers */
+[cmdk-list]::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+[cmdk-list]::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+[cmdk-list]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 4px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+[cmdk-list]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  background-clip: padding-box !important;
+}
+
+/* Group Heading - Professional Typography */
+[cmdk-group-heading] {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 12px 12px 8px 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  margin-top: 4px !important;
+  user-select: none !important;
+}
+
+[cmdk-group-heading]:first-child {
+  margin-top: 0 !important;
+}
+
+/* Command Items - Premium Hover States */
+[cmdk-item] {
+  display: flex !important;
+  align-items: center !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  padding: 10px 12px !important;
+  margin: 2px 0 !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  user-select: none !important;
+}
+
+[cmdk-item]:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #FFFFFF !important;
+  transform: translateX(2px) !important;
+}
+
+[cmdk-item][data-selected="true"] {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Icon Styling in Items */
+[cmdk-item] svg {
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease !important;
+  opacity: 0.7 !important;
+}
+
+[cmdk-item]:hover svg,
+[cmdk-item][data-selected="true"] svg {
+  opacity: 1 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Badge/Status Styling */
+[cmdk-item] .text-xs {
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.15s ease !important;
+}
+
+[cmdk-item]:hover .text-xs,
+[cmdk-item][data-selected="true"] .text-xs {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[cmdk-item][data-selected="true"] .text-primary {
+  color: #5842C8 !important;
+}
+
+[cmdk-item] .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 13px !important;
+  transition: color 0.15s ease !important;
+}
+
+[cmdk-item]:hover .text-muted-foreground,
+[cmdk-item][data-selected="true"] .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Empty State - Elegant Design */
+[cmdk-empty] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  padding: 40px 20px !important;
+  text-align: center !important;
+  user-select: none !important;
+}
+
+/* Separator between groups */
+[cmdk-separator] {
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  margin: 8px 12px !important;
+}
+
+/* Smooth Animations for Groups */
+[cmdk-group] {
+  animation: groupShow 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes groupShow {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
