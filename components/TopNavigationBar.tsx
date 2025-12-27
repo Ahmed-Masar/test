@@ -5,6 +5,7 @@ interface TopNavigationBarProps {
   onBackClick: () => void
   onForwardClick: () => void
   onSearchClick: () => void
+  onActivityLogClick: () => void
 }
 
 export default function TopNavigationBar({
@@ -12,6 +13,7 @@ export default function TopNavigationBar({
   onBackClick,
   onForwardClick,
   onSearchClick,
+  onActivityLogClick,
 }: TopNavigationBarProps) {
   return (
     <div
@@ -198,15 +200,19 @@ export default function TopNavigationBar({
       <div className="flex flex-row items-center flex-shrink-0" style={{ width: '74px', height: '24px', gap: '16px' }}>
         {/* Timer Icon */}
         <div
-          className="flex flex-row items-center"
+          className="flex flex-row items-center cursor-pointer"
+          onClick={onActivityLogClick}
           style={{
             width: '24px',
             height: '24px',
             padding: '3px 6px',
             gap: '4px',
             background: '#222222',
-            borderRadius: '8px'
+            borderRadius: '8px',
+            transition: 'background-color 0.2s',
           }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#222222'}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M7.44495 1.725H4.55495C4.35495 1.725 4.19495 1.565 4.19495 1.365C4.19495 1.165 4.35495 1 4.55495 1H7.44495C7.64495 1 7.80495 1.16 7.80495 1.36C7.80495 1.56 7.64495 1.725 7.44495 1.725Z" fill="#999999"/>

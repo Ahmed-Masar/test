@@ -22,6 +22,7 @@ interface CompaniesTableProps {
   setOpenStateMenu: (id: number | null) => void
   setOpenActionMenu: (id: number | null) => void
   updateCompanyState: (companyId: number, newState: 'Active' | 'Not Active' | 'Pending') => void
+  onRowClick: (company: Company) => void
 }
 
 export default function CompaniesTable({
@@ -33,6 +34,7 @@ export default function CompaniesTable({
   setOpenStateMenu,
   setOpenActionMenu,
   updateCompanyState,
+  onRowClick,
 }: CompaniesTableProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -308,6 +310,16 @@ export default function CompaniesTable({
                 Actions
               </span>
             </div>
+          </div>
+          <div className="flex flex-col items-start flex-1" style={{ minWidth: '0', zIndex: 0 }}>
+            <div
+              className="flex flex-row items-center w-full"
+              style={{
+                height: '30px',
+                background: '#2B2B2B',
+                borderBottom: '1px solid #2B2B2B'
+              }}
+            />
           </div>
         </div>
         <div className="flex flex-col items-start w-full overflow-x-auto" style={{ isolation: 'isolate', minWidth: 'max-content' }}>
@@ -647,6 +659,15 @@ export default function CompaniesTable({
                   </button>
                 </div>
               </div>
+              <div className="flex flex-col items-start flex-1" style={{ minWidth: '0', zIndex: 0 }}>
+                <div
+                  className="flex flex-row items-center w-full"
+                  style={{
+                    height: '30px',
+                    borderBottom: '1px solid #2B2B2B'
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -980,6 +1001,18 @@ export default function CompaniesTable({
               </span>
             </div>
           </div>
+
+          {/* Spacer Column to fill remaining space */}
+          <div className="flex flex-col items-start flex-1" style={{ minWidth: '0', zIndex: 0 }}>
+            <div
+              className="flex flex-row items-center w-full"
+              style={{
+                height: '30px',
+                background: '#2B2B2B',
+                borderBottom: '1px solid #2B2B2B'
+              }}
+            />
+          </div>
         </div>
 
         {/* Table Body with Sortable Rows */}
@@ -997,6 +1030,7 @@ export default function CompaniesTable({
                 setOpenStateMenu={setOpenStateMenu}
                 setOpenActionMenu={setOpenActionMenu}
                 updateCompanyState={updateCompanyState}
+                onRowClick={onRowClick}
               />
             ))}
           </div>

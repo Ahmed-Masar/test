@@ -20,6 +20,8 @@ import StatisticsCards from './StatisticsCards'
 import SearchAndActions from './SearchAndActions'
 import CompaniesTable from './CompaniesTable'
 import SearchCommandDialog from './CommandDialog'
+import ActivityLog from './ActivityLog'
+import CompanyDetails from './CompanyDetails'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -28,6 +30,9 @@ export default function Dashboard() {
   const [openStateMenu, setOpenStateMenu] = useState<number | null>(null)
   const [open, setOpen] = useState(false)
   const [canGoForward, setCanGoForward] = useState(false)
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -148,6 +153,16 @@ export default function Dashboard() {
     setOpenStateMenu(null)
   }
 
+  const handleRowClick = (company: Company) => {
+    setSelectedCompany(company)
+    setIsDetailsOpen(true)
+  }
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false)
+    setTimeout(() => setSelectedCompany(null), 300)
+  }
+
   // Keyboard shortcut to open command dialog (Command+K / Ctrl+K)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -166,6 +181,24 @@ export default function Dashboard() {
     return () => document.removeEventListener('keydown', down, true)
   }, [open])
 
+  // Keyboard shortcut to open activity log (Command+I / Ctrl+I)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if ((e.key === 'i' || e.key === 'I') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsActivityLogOpen((isOpen) => !isOpen)
+      }
+      if (e.key === 'Escape' && isActivityLogOpen) {
+        e.preventDefault()
+        setIsActivityLogOpen(false)
+      }
+    }
+    
+    document.addEventListener('keydown', down, true)
+    return () => document.removeEventListener('keydown', down, true)
+  }, [isActivityLogOpen])
+
   return (
     <div 
       className="flex flex-col h-screen w-screen overflow-hidden"
@@ -179,6 +212,7 @@ export default function Dashboard() {
         onBackClick={handleBackClick}
         onForwardClick={handleForwardClick}
         onSearchClick={() => setOpen(true)}
+        onActivityLogClick={() => setIsActivityLogOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -221,23 +255,35 @@ export default function Dashboard() {
 
               <CompaniesTable
                 companies={filteredCompanies}
-              sensors={sensors}
-              onDragEnd={handleDragEnd}
-                        openStateMenu={openStateMenu}
-                        openActionMenu={openActionMenu}
-                        setOpenStateMenu={setOpenStateMenu}
-                        setOpenActionMenu={setOpenActionMenu}
-                        updateCompanyState={updateCompanyState}
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
+                openStateMenu={openStateMenu}
+                openActionMenu={openActionMenu}
+                setOpenStateMenu={setOpenStateMenu}
+                setOpenActionMenu={setOpenActionMenu}
+                updateCompanyState={updateCompanyState}
+                onRowClick={handleRowClick}
                       />
+                    </div>
+                </div>
                   </div>
-        </div>
-      </div>
-      </div>
+                </div>
 
       <SearchCommandDialog
         open={open}
         onOpenChange={setOpen}
         companies={companies}
+      />
+
+      <ActivityLog
+        isOpen={isActivityLogOpen}
+        onClose={() => setIsActivityLogOpen(false)}
+      />
+
+      <CompanyDetails
+        company={selectedCompany}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
       />
     </div>
   )
