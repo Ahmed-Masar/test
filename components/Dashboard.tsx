@@ -22,6 +22,7 @@ import CompaniesTable from './CompaniesTable'
 import SearchCommandDialog from './CommandDialog'
 import ActivityLog from './ActivityLog'
 import CompanyDetails from './CompanyDetails'
+import Clients from './Clients'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -33,14 +34,21 @@ export default function Dashboard() {
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [activeView, setActiveView] = useState<'companies' | 'clients'>('companies')
+  const [activePage, setActivePage] = useState<'sales' | 'finance' | 'contract' | 'team'>('sales')
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (openActionMenu !== null) {
-        setOpenActionMenu(null)
-      }
-      if (openStateMenu !== null) {
-        setOpenStateMenu(null)
+      const target = event.target as HTMLElement
+      const isInsideMenu = target.closest('[data-action-menu]') || target.closest('[data-state-menu]')
+      
+      if (!isInsideMenu) {
+        if (openActionMenu !== null) {
+          setOpenActionMenu(null)
+        }
+        if (openStateMenu !== null) {
+          setOpenStateMenu(null)
+        }
       }
     }
     
@@ -223,7 +231,7 @@ export default function Dashboard() {
           gap: '0px'
         }}
       >
-        <Sidebar />
+        <Sidebar activeView={activeView} onViewChange={setActiveView} activePage={activePage} onPageChange={setActivePage} />
 
       {/* Main Content */}
       <div
@@ -245,25 +253,37 @@ export default function Dashboard() {
             borderRadius: '0px 8px 8px 0px'
           }}
         >
-          <div className="flex flex-col items-start w-full h-full overflow-hidden" style={{ gap: '16px' }}>
-              <StatisticsCards />
+          <div className="flex flex-col items-start w-full h-full overflow-hidden" style={{ gap: '4px' }}>
+              {activePage === 'sales' ? (
+                activeView === 'companies' ? (
+                  <>
+                    <StatisticsCards />
 
-              <SearchAndActions
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
+                    <SearchAndActions
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                    />
 
-              <CompaniesTable
-                companies={filteredCompanies}
-                sensors={sensors}
-                onDragEnd={handleDragEnd}
-                openStateMenu={openStateMenu}
-                openActionMenu={openActionMenu}
-                setOpenStateMenu={setOpenStateMenu}
-                setOpenActionMenu={setOpenActionMenu}
-                updateCompanyState={updateCompanyState}
-                onRowClick={handleRowClick}
-                      />
+                    <CompaniesTable
+                      companies={filteredCompanies}
+                      sensors={sensors}
+                      onDragEnd={handleDragEnd}
+                      openStateMenu={openStateMenu}
+                      openActionMenu={openActionMenu}
+                      setOpenStateMenu={setOpenStateMenu}
+                      setOpenActionMenu={setOpenActionMenu}
+                      updateCompanyState={updateCompanyState}
+                      onRowClick={handleRowClick}
+                    />
+                  </>
+                ) : (
+                  <Clients />
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center w-full h-full" style={{ color: '#999999', fontFamily: 'SF Pro', fontSize: '14px' }}>
+                  {activePage === 'finance' ? 'Finance page is empty' : activePage === 'contract' ? 'Contract page is empty' : 'Team page is empty'}
+                </div>
+              )}
                     </div>
                 </div>
                   </div>
