@@ -3,9 +3,10 @@
 interface SearchAndActionsProps {
   searchQuery: string
   onSearchChange: (value: string) => void
+  onNewCompanyClick?: () => void
 }
 
-export default function SearchAndActions({ searchQuery, onSearchChange }: SearchAndActionsProps) {
+export default function SearchAndActions({ searchQuery, onSearchChange, onNewCompanyClick }: SearchAndActionsProps) {
   return (
     <div className="flex flex-row items-center justify-between w-full flex-shrink-0 flex-wrap" style={{ minHeight: '50px', gap: '8px' }}>
       {/* Search Bar */}
@@ -60,6 +61,7 @@ export default function SearchAndActions({ searchQuery, onSearchChange }: Search
           <div className="flex flex-row items-center">
             <div
               className="flex flex-row justify-center items-center"
+              onClick={onNewCompanyClick}
               style={{
                 minWidth: '32px',
                 width: 'auto',
@@ -67,7 +69,15 @@ export default function SearchAndActions({ searchQuery, onSearchChange }: Search
                 padding: '4px 12px',
                 gap: '5px',
                 background: '#2B2B2B',
-                borderRadius: '14px'
+                borderRadius: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#353535'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#2B2B2B'
               }}
             >
               <div className="flex flex-row items-center" style={{ gap: '4px' }}>

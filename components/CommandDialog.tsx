@@ -41,6 +41,7 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
   const [commandSearchQuery, setCommandSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
+  const [isClosing, setIsClosing] = useState(false)
   const hasInitialized = useRef(false)
 
   const defaultCompanies = useMemo(() => {
@@ -67,7 +68,7 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
             const missing = 5 - limited.length
             const additionalSearches: RecentSearch[] = defaultCompanies
               .slice(0, missing)
-              .filter(dc => !limited.some(l => l.companyId === dc.id))
+              .filter(dc => !limited.some((l: RecentSearch) => l.companyId === dc.id))
               .map((company, index) => ({
                 id: Date.now() + index + 1000,
                 type: 'company' as const,
@@ -140,11 +141,21 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
 
   const hasResults = searchResults.companies.length > 0
 
+  // Handle close with animation
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onOpenChange(false)
+      setIsClosing(false)
+      setCommandSearchQuery('')
+    }, 250)
+  }
+
   // Handle navigation
   const handleSelect = (path: string, name: string) => {
     saveRecentSearch({ id: Date.now(), type: 'navigation', name, path })
-    onOpenChange(false)
-    router.push(path)
+    handleClose()
+    setTimeout(() => router.push(path), 300)
   }
 
   // Handle company selection
@@ -158,14 +169,16 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
         companyId 
       })
     }
-    onOpenChange(false)
+    handleClose()
     console.log('Selected company:', companyId)
   }
 
   return (
     <>
+      {/* Custom Overlay with Animation */}
       {open && (
         <div
+          onClick={handleClose}
           style={{
             position: 'fixed',
             inset: 0,
@@ -177,22 +190,25 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
             height: '100vh',
             zIndex: 50,
             background: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(12px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-            animation: 'overlayFadeIn 250ms ease-out',
+            backdropFilter: 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
             willChange: 'backdrop-filter, opacity',
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            animation: isClosing 
+              ? 'overlayFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+              : 'overlayFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}
-          onClick={() => onOpenChange(false)}
         />
       )}
+      
       <CommandDialog
         open={open}
         shouldFilter={false}
         onOpenChange={(isOpen) => {
-          onOpenChange(isOpen)
           if (!isOpen) {
-            setCommandSearchQuery('')
+            handleClose()
+          } else {
+            onOpenChange(isOpen)
           }
         }}
       >
@@ -211,25 +227,32 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
           }}
         />
         <CommandList>
+          {/* Loading State */}
           {isSearching && (
             <div
               className="flex items-center justify-center py-8"
               style={{
-                color: 'rgba(255, 255, 255, 0.5)'
+                color: 'rgba(255, 255, 255, 0.5)',
+                animation: 'fadeIn 0.2s ease'
               }}
             >
-              <Loader2 className="h-5 w-5 animate-spin mr-3" />
+              <Loader2 
+                className="h-5 w-5 mr-3" 
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
               <span className="text-sm">Searching...</span>
             </div>
           )}
 
+          {/* No Results State */}
           {!isSearching && commandSearchQuery && commandSearchQuery.length >= 2 && !hasResults && (
             <CommandEmpty>
               <div style={{ padding: '20px 0' }}>
                 <div style={{
                   fontSize: '32px',
                   marginBottom: '12px',
-                  opacity: 0.3
+                  opacity: 0.3,
+                  animation: 'emptyBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                 }}>
                   🔍
                 </div>
@@ -244,17 +267,19 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
             </CommandEmpty>
           )}
 
+          {/* Search Results */}
           {!isSearching && commandSearchQuery && commandSearchQuery.length >= 2 && hasResults && (
             <>
               <CommandGroup heading="Companies">
-                {searchResults.companies.map((company) => (
+                {searchResults.companies.map((company, index) => (
                   <CommandItem
                     key={company.id}
                     value={`company-${company.id}`}
                     onSelect={() => handleSelectCompany(company.id)}
                     style={{
                       cursor: 'pointer',
-                      padding: '12px 16px'
+                      padding: '12px 16px',
+                      animationDelay: `${0.1 + index * 0.05}s`
                     }}
                   >
                     <div className="flex items-center gap-3">
@@ -270,6 +295,7 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
             </>
           )}
 
+          {/* Default View */}
           {!commandSearchQuery || commandSearchQuery.length < 2 ? (
             <>
               <CommandGroup heading="Navigation">
@@ -316,7 +342,7 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
               
               {recentSearches.length > 0 && (
                 <CommandGroup heading="Recent Searches">
-                  {recentSearches.map((search) => {
+                  {recentSearches.map((search, index) => {
                     const company = search.type === 'company' && search.companyId 
                       ? companies.find(c => c.id === search.companyId)
                       : null
@@ -334,7 +360,8 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
                         }}
                         style={{
                           cursor: 'pointer',
-                          padding: '12px 16px'
+                          padding: '12px 16px',
+                          animationDelay: `${0.25 + index * 0.05}s`
                         }}
                       >
                         <div className="flex items-center gap-3">
@@ -365,7 +392,59 @@ export default function SearchCommandDialog({ open, onOpenChange, companies }: C
           ) : null}
         </CommandList>
       </CommandDialog>
+
+      {/* Inline Animation Styles */}
+      <style jsx global>{`
+        @keyframes overlayFadeIn {
+          0% {
+            opacity: 0;
+            backdrop-filter: blur(0px) saturate(100%);
+            -webkit-backdrop-filter: blur(0px) saturate(100%);
+          }
+          100% {
+            opacity: 1;
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+          }
+        }
+
+        @keyframes overlayFadeOut {
+          0% {
+            opacity: 1;
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+          }
+          100% {
+            opacity: 0;
+            backdrop-filter: blur(0px) saturate(100%);
+            -webkit-backdrop-filter: blur(0px) saturate(100%);
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes emptyBounceIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          60% {
+            transform: scale(1.02);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </>
   )
 }
-

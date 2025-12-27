@@ -23,6 +23,7 @@ import SearchCommandDialog from './CommandDialog'
 import ActivityLog from './ActivityLog'
 import CompanyDetails from './CompanyDetails'
 import Clients from './Clients'
+import AddCompanyDialog from './AddCompanyDialog'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [isAddCompanyDialogOpen, setIsAddCompanyDialogOpen] = useState(false)
   const [activeView, setActiveView] = useState<'companies' | 'clients'>('companies')
   const [activePage, setActivePage] = useState<'sales' | 'finance' | 'contract' | 'team'>('sales')
   
@@ -139,7 +141,6 @@ export default function Dashboard() {
     })
   )
 
-  // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
@@ -159,6 +160,9 @@ export default function Dashboard() {
       )
     )
     setOpenStateMenu(null)
+    if (selectedCompany && selectedCompany.id === companyId) {
+      setSelectedCompany({ ...selectedCompany, state: newState })
+    }
   }
 
   const handleRowClick = (company: Company) => {
@@ -169,6 +173,15 @@ export default function Dashboard() {
   const handleCloseDetails = () => {
     setIsDetailsOpen(false)
     setTimeout(() => setSelectedCompany(null), 300)
+  }
+
+  const handleAddCompany = (companyData: Omit<Company, 'id'>) => {
+    const newId = Math.max(...companies.map(c => c.id), 0) + 1
+    const newCompany: Company = {
+      ...companyData,
+      id: newId,
+    }
+    setCompanies(prev => [newCompany, ...prev])
   }
 
   // Keyboard shortcut to open command dialog (Command+K / Ctrl+K)
@@ -262,6 +275,7 @@ export default function Dashboard() {
                     <SearchAndActions
                       searchQuery={searchQuery}
                       onSearchChange={setSearchQuery}
+                      onNewCompanyClick={() => setIsAddCompanyDialogOpen(true)}
                     />
 
                     <CompaniesTable
@@ -304,6 +318,13 @@ export default function Dashboard() {
         company={selectedCompany}
         isOpen={isDetailsOpen}
         onClose={handleCloseDetails}
+        updateCompanyState={updateCompanyState}
+      />
+
+      <AddCompanyDialog
+        isOpen={isAddCompanyDialogOpen}
+        onClose={() => setIsAddCompanyDialogOpen(false)}
+        onAdd={handleAddCompany}
       />
     </div>
   )

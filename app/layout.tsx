@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ReduxProvider from '@/components/ReduxProvider'
 
 export const metadata: Metadata = {
   title: 'Vodex OS',
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="h-full overflow-hidden">{children}</body>
+      <body className="h-full overflow-hidden">
+        <ReduxProvider>{children}</ReduxProvider>
+      </body>
     </html>
   )
 }

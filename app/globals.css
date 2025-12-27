@@ -169,64 +169,22 @@ a, button, input, label {
   transition: all 0.3s ease;
 }
 
-/* Command Dialog Styles - Overlay with Light Blur */
+/* ============================================
+   BEAUTIFUL DIALOG ANIMATIONS
+   ============================================ */
+
+/* Overlay Animation - Smooth blur fade in */
 [data-radix-dialog-overlay],
 [data-radix-dialog-overlay][data-state="open"],
 div[data-radix-dialog-overlay],
 div[role="dialog"] ~ div[data-radix-dialog-overlay],
 [data-radix-portal] > [data-radix-dialog-overlay],
-[data-radix-portal] > div[data-radix-dialog-overlay] {
-  background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
-  position: fixed !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 50 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  animation: overlayShow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
-  pointer-events: auto !important;
-  will-change: backdrop-filter, opacity !important;
-}
-
-@keyframes overlayShow {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(12px) saturate(120%);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
-  }
-}
-
-@keyframes overlayFadeIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(12px) saturate(120%);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
-  }
-}
-
+[data-radix-portal] > div[data-radix-dialog-overlay],
 [cmdk-dialog-overlay],
 div[cmdk-dialog-overlay] {
   background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+  backdrop-filter: blur(16px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
   position: fixed !important;
   inset: 0 !important;
   top: 0 !important;
@@ -239,9 +197,46 @@ div[cmdk-dialog-overlay] {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  animation: overlayShow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
   pointer-events: auto !important;
   will-change: backdrop-filter, opacity !important;
+}
+
+/* Overlay Open State */
+[data-radix-dialog-overlay][data-state="open"],
+[cmdk-dialog-overlay][data-state="open"] {
+  animation: overlayFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Overlay Close State */
+[data-radix-dialog-overlay][data-state="closed"],
+[cmdk-dialog-overlay][data-state="closed"] {
+  animation: overlayFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes overlayFadeIn {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+}
+
+@keyframes overlayFadeOut {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+  }
 }
 
 /* Force blur on body when dialog is open */
@@ -250,6 +245,7 @@ body:has([cmdk-dialog-overlay]) {
   overflow: hidden !important;
 }
 
+/* Dialog Content - Spring Animation */
 [data-radix-dialog-content],
 [cmdk-dialog] {
   background: linear-gradient(135deg, #1A1A1A 0%, #151515 100%) !important;
@@ -265,29 +261,64 @@ body:has([cmdk-dialog-overlay]) {
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
-  transform: translate(-50%, -50%) !important;
   z-index: 1000 !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  animation: contentShow 250ms cubic-bezier(0.16, 1, 0.3, 1) !important;
   display: flex !important;
   flex-direction: column !important;
   max-height: 80vh !important;
+  will-change: transform, opacity !important;
 }
 
-@keyframes contentShow {
-  from {
+/* Dialog Open Animation - Beautiful Spring Effect */
+[data-radix-dialog-content][data-state="open"],
+[cmdk-dialog][data-state="open"] {
+  animation: dialogSpringIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+/* Dialog Close Animation */
+[data-radix-dialog-content][data-state="closed"],
+[cmdk-dialog][data-state="closed"],
+[data-radix-dialog-content]:not([data-state="open"]),
+[cmdk-dialog]:not([data-state="open"]) {
+  animation: dialogSpringOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes dialogSpringIn {
+  0% {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
+    transform: translate(-50%, -45%) scale(0.9);
   }
-  to {
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -51%) scale(1.02);
+  }
+  75% {
+    transform: translate(-50%, -49.5%) scale(0.99);
+  }
+  100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
 }
 
-/* Enhanced Input Design */
+@keyframes dialogSpringOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -45%) scale(0.95);
+  }
+}
+
+/* ============================================
+   COMMAND LIST ITEMS - STAGGERED ANIMATION
+   ============================================ */
+
+/* Command Input Animation */
 [cmdk-input] {
   background: transparent !important;
   border: none !important;
@@ -301,6 +332,18 @@ body:has([cmdk-dialog-overlay]) {
   outline: none !important;
   transition: all 0.2s ease !important;
   box-sizing: border-box !important;
+  animation: inputSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both !important;
+}
+
+@keyframes inputSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 [cmdk-input]::placeholder {
@@ -327,6 +370,16 @@ body:has([cmdk-dialog-overlay]) {
   scrollbar-width: thin !important;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
   flex: 1 !important;
+  animation: listFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both !important;
+}
+
+@keyframes listFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Custom Scrollbar for Webkit browsers */
@@ -350,7 +403,7 @@ body:has([cmdk-dialog-overlay]) {
   background-clip: padding-box !important;
 }
 
-/* Group Heading - Professional Typography */
+/* Group Heading - Staggered Animation */
 [cmdk-group-heading] {
   color: rgba(255, 255, 255, 0.45) !important;
   font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
@@ -361,13 +414,25 @@ body:has([cmdk-dialog-overlay]) {
   letter-spacing: 0.8px !important;
   margin-top: 4px !important;
   user-select: none !important;
+  animation: headingSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@keyframes headingSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 [cmdk-group-heading]:first-child {
   margin-top: 0 !important;
 }
 
-/* Command Items - Premium Hover States */
+/* Command Items - Staggered Slide Animation */
 [cmdk-item] {
   display: flex !important;
   align-items: center !important;
@@ -379,16 +444,39 @@ body:has([cmdk-dialog-overlay]) {
   margin: 2px 0 !important;
   border-radius: 10px !important;
   cursor: pointer !important;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   position: relative !important;
   overflow: hidden !important;
   user-select: none !important;
+  animation: itemSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
+/* Staggered delay for items */
+[cmdk-item]:nth-child(1) { animation-delay: 0.1s !important; }
+[cmdk-item]:nth-child(2) { animation-delay: 0.15s !important; }
+[cmdk-item]:nth-child(3) { animation-delay: 0.2s !important; }
+[cmdk-item]:nth-child(4) { animation-delay: 0.25s !important; }
+[cmdk-item]:nth-child(5) { animation-delay: 0.3s !important; }
+[cmdk-item]:nth-child(6) { animation-delay: 0.35s !important; }
+[cmdk-item]:nth-child(7) { animation-delay: 0.4s !important; }
+[cmdk-item]:nth-child(8) { animation-delay: 0.45s !important; }
+
+@keyframes itemSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Item Hover Effects */
 [cmdk-item]:hover {
   background: rgba(255, 255, 255, 0.06) !important;
   color: #FFFFFF !important;
-  transform: translateX(2px) !important;
+  transform: translateX(4px) !important;
 }
 
 [cmdk-item][data-selected="true"] {
@@ -397,19 +485,20 @@ body:has([cmdk-dialog-overlay]) {
   box-shadow: 
     0 0 0 1px rgba(255, 255, 255, 0.08),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(4px) !important;
 }
 
 /* Icon Styling in Items */
 [cmdk-item] svg {
   flex-shrink: 0 !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.2s ease !important;
   opacity: 0.7 !important;
 }
 
 [cmdk-item]:hover svg,
 [cmdk-item][data-selected="true"] svg {
   opacity: 1 !important;
-  transform: scale(1.05) !important;
+  transform: scale(1.1) !important;
 }
 
 /* Badge/Status Styling */
@@ -445,7 +534,7 @@ body:has([cmdk-dialog-overlay]) {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Empty State - Elegant Design */
+/* Empty State - Elegant Animation */
 [cmdk-empty] {
   display: flex !important;
   flex-direction: column !important;
@@ -458,6 +547,21 @@ body:has([cmdk-dialog-overlay]) {
   padding: 40px 20px !important;
   text-align: center !important;
   user-select: none !important;
+  animation: emptyBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes emptyBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Separator between groups */
@@ -465,20 +569,89 @@ body:has([cmdk-dialog-overlay]) {
   height: 1px !important;
   background: rgba(255, 255, 255, 0.06) !important;
   margin: 8px 12px !important;
+  animation: separatorFadeIn 0.3s ease 0.2s both !important;
 }
 
-/* Smooth Animations for Groups */
-[cmdk-group] {
-  animation: groupShow 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-@keyframes groupShow {
-  from {
+@keyframes separatorFadeIn {
+  0% {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: scaleX(0);
   }
-  to {
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Group Animation */
+[cmdk-group] {
+  animation: groupFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@keyframes groupFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Loading State Animation */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   SEARCH RESULTS ANIMATION
+   ============================================ */
+
+.search-results-enter {
+  animation: resultsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes resultsSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   SHIMMER EFFECT FOR LOADING
+   ============================================ */
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

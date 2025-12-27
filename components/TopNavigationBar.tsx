@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { logoutAsync } from '@/store/authSlice'
 
 interface TopNavigationBarProps {
   canGoForward: boolean
@@ -32,7 +35,10 @@ export default function TopNavigationBar({
   const userMenuRef = useRef<HTMLDivElement>(null)
   const nextWorkspaceId = useRef(4)
   const inputRef = useRef<HTMLInputElement>(null)
-  const userName = 'Ahmed Rashed'
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { user } = useAppSelector((state) => state.auth)
+  const userName = user?.name || 'User'
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -131,8 +137,10 @@ export default function TopNavigationBar({
     setShowDeleteDialog(false)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsUserMenuOpen(false)
+    await dispatch(logoutAsync())
+    router.push('/')
   }
 
   return (

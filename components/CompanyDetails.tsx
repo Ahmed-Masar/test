@@ -1,6 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import AddProjectDialog from './AddProjectDialog';
 
 // Types
 interface Company {
@@ -43,6 +59,7 @@ interface CompanyDetailsProps {
   company: Company | null;
   isOpen: boolean;
   onClose: () => void;
+  updateCompanyState?: (companyId: number, newState: 'Active' | 'Not Active' | 'Pending') => void;
 }
 
 interface AvatarProps {
@@ -58,6 +75,7 @@ interface BadgeProps {
   hasClose?: boolean;
   hasArrow?: boolean;
   textColor?: string;
+  onClose?: () => void;
 }
 
 interface FieldRowProps {
@@ -113,19 +131,18 @@ const Icons = {
     </svg>
   ),
   Location: (): JSX.Element => (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M6 1C3.79 1 2 2.79 2 5C2 8 6 11 6 11C6 11 10 8 10 5C10 2.79 8.21 1 6 1ZM6 6.5C5.17 6.5 4.5 5.83 4.5 5C4.5 4.17 5.17 3.5 6 3.5C6.83 3.5 7.5 4.17 7.5 5C7.5 5.83 6.83 6.5 6 6.5Z" fill="#FFFFFF"/>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scale(0.5)', transformOrigin: 'top left' }}>
+      <rect width="24" height="24" rx="8" fill="#222222"/>
+      <path d="M14.1675 5.5875H9.83248C9.53248 5.5875 9.29248 5.3475 9.29248 5.0475C9.29248 4.7475 9.53248 4.5 9.83248 4.5H14.1675C14.4675 4.5 14.7075 4.74 14.7075 5.04C14.7075 5.34 14.4675 5.5875 14.1675 5.5875Z" fill="#999999"/>
+      <path d="M13.5001 17.9775V15.7725C13.5001 14.415 14.4151 13.5 15.7726 13.5H17.9776C18.1501 13.5 18.3151 13.515 18.4726 13.545C18.4876 13.365 18.5026 13.185 18.5026 12.9975C18.5026 9.40505 15.5851 6.48755 12.0001 6.48755C8.41506 6.48755 5.49756 9.40505 5.49756 12.9975C5.49756 16.5825 8.41506 19.5 12.0001 19.5C12.6376 19.5 13.2451 19.395 13.8301 19.23C13.6201 18.8775 13.5001 18.4575 13.5001 17.9775ZM12.5626 12.75C12.5626 13.0575 12.3076 13.3125 12.0001 13.3125C11.6926 13.3125 11.4376 13.0575 11.4376 12.75V9.00005C11.4376 8.69255 11.6926 8.43755 12.0001 8.43755C12.3076 8.43755 12.5626 8.69255 12.5626 9.00005V12.75Z" fill="#999999"/>
+      <path d="M17.9775 14.25H15.78C14.82 14.25 14.25 14.82 14.25 15.7725V17.9775C14.25 18.93 14.82 19.5 15.78 19.5H17.9775C18.93 19.5 19.5 18.93 19.5 17.9775V15.7725C19.5 14.82 18.93 14.25 17.9775 14.25ZM16.44 18.045C16.44 18.285 16.245 18.48 15.9975 18.48C15.7575 18.48 15.5625 18.285 15.5625 18.045V15.705C15.5625 15.465 15.7575 15.27 15.9975 15.27C16.245 15.27 16.44 15.465 16.44 15.705V18.045ZM18.1875 18.045C18.1875 18.285 17.9925 18.48 17.7525 18.48C17.5125 18.48 17.31 18.285 17.31 18.045V15.705C17.31 15.465 17.5125 15.27 17.7525 15.27C17.9925 15.27 18.1875 15.465 18.1875 15.705V18.045Z" fill="#999999"/>
     </svg>
   ),
   ArrowDown: (): JSX.Element => (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: 'rotate(-90deg)' }}>
-      <path d="M2.08333 3.33333L5 6.25L7.91667 3.33333" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+    <img src="/icon compan/Arrow.svg" alt="" width="10" height="10" />
   ),
   ArrowDownGray: (): JSX.Element => (
-    <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-      <path d="M2.08333 3.33333L5 6.25L7.91667 3.33333" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+    <img src="/icon compan/Arrow.svg" alt="" width="12" height="12" style={{ transform: 'rotate(90deg)' }} />
   ),
   Messages: (): JSX.Element => (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -253,7 +270,8 @@ const Badge: React.FC<BadgeProps> = ({
   color = '#5842C8', 
   hasClose = false, 
   hasArrow = false, 
-  textColor = '#FFFFFF' 
+  textColor = '#FFFFFF',
+  onClose
 }) => (
   <div
     className="inline-flex items-center gap-1"
@@ -271,7 +289,13 @@ const Badge: React.FC<BadgeProps> = ({
   >
     {children}
     {hasClose && (
-      <span className="cursor-pointer opacity-80 hover:opacity-100 ml-0.5">
+      <span 
+        className="cursor-pointer opacity-80 hover:opacity-100 ml-0.5"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose?.();
+        }}
+      >
         <Icons.Close />
       </span>
     )}
@@ -302,7 +326,9 @@ const FieldRow: React.FC<FieldRowProps> = ({ icon, label, children }) => (
         {label}
       </span>
     </div>
-    <div className="flex items-center px-2 py-1">{children}</div>
+    {children && (
+      <div className="flex items-center px-2 py-1 flex-1">{children}</div>
+    )}
   </div>
 );
 
@@ -310,6 +336,226 @@ const FieldRow: React.FC<FieldRowProps> = ({ icon, label, children }) => (
 const Divider: React.FC = () => (
   <div style={{ width: '100%', height: 1, background: '#2B2B2B', margin: '4px 0' }} />
 );
+
+// Sortable Project Row component
+interface SortableProjectRowProps {
+  project: {
+    id: string;
+    name: string;
+    state: string;
+    totalAmount: string;
+    startDate: string;
+    endDate: string;
+  };
+  index: number;
+  totalProjects: number;
+  onUpdateState?: (projectId: string, newState: string) => void;
+}
+
+const SortableProjectRow: React.FC<SortableProjectRowProps> = ({ project, index, totalProjects, onUpdateState }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project.id });
+  const [isStateMenuOpen, setIsStateMenuOpen] = useState(false);
+  const [currentState, setCurrentState] = useState(project.state);
+
+  useEffect(() => {
+    setCurrentState(project.state);
+  }, [project.state]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isStateMenuOpen && !target.closest(`[data-project-state-menu-${project.id}]`) && !target.closest(`[data-project-state-button-${project.id}]`)) {
+        setIsStateMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isStateMenuOpen, project.id]);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        borderBottom: index < totalProjects - 1 ? '1px solid #2B2B2B' : 'none',
+      }}
+      className="flex items-center hover:bg-[#1A1A1A] transition-colors"
+    >
+      <div className="flex flex-col items-start flex-shrink-0" style={{ width: '20px', zIndex: 0 }}>
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex flex-row items-center justify-center flex-shrink-0"
+          style={{
+            width: '20px',
+            height: '30px',
+            padding: '12px 4px',
+            gap: '0px',
+            cursor: 'grab',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src="/more.png"
+            alt="more"
+            style={{
+              width: '6px',
+              height: '13px'
+            }}
+          />
+        </div>
+      </div>
+      <div className="w-[126px] py-3 px-1">
+        <div className="flex items-center gap-1">
+          <img
+            src="/Frame 312.png"
+            alt="Project"
+            className="w-4 h-4 rounded object-cover"
+          />
+          <span style={{ ...textStyle, color: '#999999' }}>{project.name}</span>
+        </div>
+      </div>
+      <div className="w-[94px] py-3 px-1 flex justify-center relative">
+        <button
+          data-project-state-button={project.id}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsStateMenuOpen(!isStateMenuOpen);
+          }}
+          className="cursor-pointer"
+          type="button"
+        >
+          <Badge 
+            color={
+              currentState === 'Active' ? '#008E5A' : 
+              currentState === 'Not Active' ? '#8E1F00' : 
+              '#DC6300'
+            } 
+            hasArrow
+          >
+            {currentState}
+          </Badge>
+        </button>
+        {isStateMenuOpen && onUpdateState && (
+          <div
+            data-project-state-menu={project.id}
+            className="absolute top-full left-0 mt-1 z-50"
+            style={{
+              width: '120px',
+              background: '#000000',
+              border: '1px solid #2B2B2B',
+              borderRadius: '8px',
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.4)',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentState('Active');
+                onUpdateState(project.id, 'Active');
+                setIsStateMenuOpen(false);
+              }}
+              className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+              style={{
+                gap: '8px',
+                borderBottom: '1px solid #2B2B2B'
+              }}
+              type="button"
+            >
+              <div style={{ width: '8px', height: '8px', background: '#008E5A', borderRadius: '50%' }} />
+              <span
+                style={{
+                  fontFamily: 'SF Pro',
+                  fontWeight: 510,
+                  fontSize: '12px',
+                  lineHeight: '16px',
+                  color: '#FBFBFB'
+                }}
+              >
+                Active
+              </span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentState('Not Active');
+                onUpdateState(project.id, 'Not Active');
+                setIsStateMenuOpen(false);
+              }}
+              className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+              style={{
+                gap: '8px',
+                borderBottom: '1px solid #2B2B2B'
+              }}
+              type="button"
+            >
+              <div style={{ width: '8px', height: '8px', background: '#8E1F00', borderRadius: '50%' }} />
+              <span
+                style={{
+                  fontFamily: 'SF Pro',
+                  fontWeight: 510,
+                  fontSize: '12px',
+                  lineHeight: '16px',
+                  color: '#FBFBFB'
+                }}
+              >
+                Not Active
+              </span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentState('Pending');
+                onUpdateState(project.id, 'Pending');
+                setIsStateMenuOpen(false);
+              }}
+              className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+              style={{ gap: '8px' }}
+              type="button"
+            >
+              <div style={{ width: '8px', height: '8px', background: '#DC6300', borderRadius: '50%' }} />
+              <span
+                style={{
+                  fontFamily: 'SF Pro',
+                  fontWeight: 510,
+                  fontSize: '12px',
+                  lineHeight: '16px',
+                  color: '#FBFBFB'
+                }}
+              >
+                Pending
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="w-[99px] py-3 px-1 text-center">
+        <span style={{ ...textStyle, color: '#999999' }}>{project.totalAmount}</span>
+      </div>
+      <div className="w-[172px] py-3 px-1">
+        <span style={{ ...textStyle, color: '#999999' }}>{project.startDate} → {project.endDate}</span>
+      </div>
+      <div className="w-[57px] py-3 px-1 flex justify-center">
+        <Icons.More />
+      </div>
+    </div>
+  );
+};
 
 // Text style constant
 const textStyle: React.CSSProperties = {
@@ -321,9 +567,43 @@ const textStyle: React.CSSProperties = {
 };
 
 // Company Details Component
-const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClose }) => {
+const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClose, updateCompanyState }) => {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>(company?.tags || ['test', 'test', 'test']);
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
+  const [typeOptions, setTypeOptions] = useState<string[]>(['Big Company', 'Small Company', 'Medium Company', 'Startup']);
+  const [newTypeValue, setNewTypeValue] = useState('');
+  const [currentType, setCurrentType] = useState<string>(company?.type || 'Big Company');
+  const [projectsList, setProjectsList] = useState<Array<{
+    id: string;
+    name: string;
+    state: string;
+    totalAmount: string;
+    startDate: string;
+    endDate: string;
+  }>>([]);
+  const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleProjectDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setProjectsList((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newItems = [...items];
+        const [movedItem] = newItems.splice(oldIndex, 1);
+        newItems.splice(newIndex, 0, movedItem);
+        return newItems;
+      });
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent): void => {
@@ -350,15 +630,36 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
     }
   }, [isOpen, company]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isStatusMenuOpen && !target.closest('[data-status-menu]') && !target.closest('[data-status-button]')) {
+        setIsStatusMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isStatusMenuOpen]);
+
+  useEffect(() => {
+    if (company?.tags) {
+      setTags(company.tags);
+    }
+  }, [company?.tags]);
+
+  useEffect(() => {
+    const companyName = company?.companyName || 'ECOTREND';
+    const newProjects = company?.projects || [
+      { id: '1', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
+      { id: '2', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
+      { id: '3', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
+    ];
+    setProjectsList(newProjects);
+  }, [company?.projects, company?.companyName]);
+
   if (!company || !isMounted) return null;
 
   const companyName = company.companyName || 'ECOTREND';
-  const tags = company.tags || ['test', 'test', 'test'];
-  const projects = company.projects || [
-    { id: '1', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
-    { id: '2', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
-    { id: '3', name: companyName, state: 'Pending', totalAmount: '4,000,000', startDate: '25/12/1', endDate: '25/12/13' },
-  ];
 
   return (
     <>
@@ -386,24 +687,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
         {/* Header with Background Image */}
         <div className="relative h-[200px] w-full">
           {/* Background Image */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(135deg, #1a2a3a 0%, #0d1520 50%, #2d1810 100%)',
-            }}
-          >
-            {/* Building silhouette overlay */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  linear-gradient(to bottom, transparent 60%, #000 100%),
-                  repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(255,180,50,0.3) 40px, rgba(255,180,50,0.3) 45px),
-                  repeating-linear-gradient(180deg, transparent 0, transparent 30px, rgba(255,180,50,0.15) 30px, rgba(255,180,50,0.15) 35px)
-                `,
-              }}
-            />
-          </div>
+          <img
+            src="/Frame 324.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           
           {/* Gradient Overlay */}
           <div
@@ -438,10 +726,11 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
               className="flex-shrink-0 rounded-[14.8px] overflow-hidden"
               style={{ width: 70, height: 70, background: '#1a1a1a' }}
             >
-              {/* Placeholder for company logo */}
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800">
-                <span className="text-2xl">🌿</span>
-              </div>
+              <img
+                src="/Frame 312.png"
+                alt="Company logo"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col gap-[3px]">
               <span style={{ ...textStyle, color: '#FFFFFF' }}>
@@ -473,9 +762,15 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
                 className="flex items-center gap-1 px-2 py-1 rounded-lg"
                 style={{ background: '#676767' }}
                 type="button"
+                onClick={() => {
+                  const address = company.address || 'Iraq - Baghdad - Karada - St 62. Floor 3 Room 12';
+                  const encodedAddress = encodeURIComponent(address);
+                  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                  window.open(googleMapsUrl, '_blank');
+                }}
               >
                 <div className="flex items-center gap-1.5 px-1.5">
-                  <Icons.Location />
+                  <img src="/icon compan/Location.svg" alt="" width="12" height="12" />
                   <span style={{ ...textStyle, color: '#FFFFFF' }}>Google Map</span>
                 </div>
                 <div style={{ width: 1, height: 12, background: 'rgba(30, 30, 30, 0.5)' }} />
@@ -492,28 +787,144 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
             <div className="flex gap-1">
               {/* Labels */}
               <div className="flex flex-col gap-2.5">
-                <FieldRow icon={<Icons.Essential />} label="Status" />
-                <FieldRow icon={<Icons.Tag />} label="Tags" />
-                <FieldRow icon={<Icons.Flag />} label="Priority" />
-              </div>
-              {/* Values */}
-              <div className="flex flex-col gap-2.5 pl-2">
-                <div className="flex items-center py-1">
-                  <Badge color="#DC6300" hasArrow>{company.state || 'Pending'}</Badge>
+                <div className="relative">
+                  <FieldRow icon={<Icons.Essential />} label="Status">
+                    <button
+                      data-status-button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsStatusMenuOpen(!isStatusMenuOpen);
+                      }}
+                      className="cursor-pointer"
+                      type="button"
+                    >
+                      <Badge 
+                        color={
+                          company.state === 'Active' ? '#008E5A' : 
+                          company.state === 'Not Active' ? '#8E1F00' : 
+                          '#DC6300'
+                        } 
+                        hasArrow
+                      >
+                        {company.state || 'Pending'}
+                      </Badge>
+                    </button>
+                  </FieldRow>
+                  {isStatusMenuOpen && updateCompanyState && (
+                    <div
+                      data-status-menu
+                      className="absolute top-full left-0 mt-1 z-50"
+                      style={{
+                        width: '120px',
+                        background: '#000000',
+                        border: '1px solid #2B2B2B',
+                        borderRadius: '8px',
+                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.4)',
+                        overflow: 'hidden',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCompanyState(company.id, 'Active');
+                          setIsStatusMenuOpen(false);
+                        }}
+                        className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+                        style={{
+                          gap: '8px',
+                          borderBottom: '1px solid #2B2B2B'
+                        }}
+                        type="button"
+                      >
+                        <div style={{ width: '8px', height: '8px', background: '#008E5A', borderRadius: '50%' }} />
+                        <span
+                          style={{
+                            fontFamily: 'SF Pro',
+                            fontWeight: 510,
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            color: '#FBFBFB'
+                          }}
+                        >
+                          Active
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCompanyState(company.id, 'Not Active');
+                          setIsStatusMenuOpen(false);
+                        }}
+                        className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+                        style={{
+                          gap: '8px',
+                          borderBottom: '1px solid #2B2B2B'
+                        }}
+                        type="button"
+                      >
+                        <div style={{ width: '8px', height: '8px', background: '#8E1F00', borderRadius: '50%' }} />
+                        <span
+                          style={{
+                            fontFamily: 'SF Pro',
+                            fontWeight: 510,
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            color: '#FBFBFB'
+                          }}
+                        >
+                          Not Active
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateCompanyState(company.id, 'Pending');
+                          setIsStatusMenuOpen(false);
+                        }}
+                        className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+                        style={{ gap: '8px' }}
+                        type="button"
+                      >
+                        <div style={{ width: '8px', height: '8px', background: '#DC6300', borderRadius: '50%' }} />
+                        <span
+                          style={{
+                            fontFamily: 'SF Pro',
+                            fontWeight: 510,
+                            fontSize: '12px',
+                            lineHeight: '16px',
+                            color: '#FBFBFB'
+                          }}
+                        >
+                          Pending
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-1 py-1">
-                  {tags.slice(0, 3).map((tag, index) => (
-                    <Badge key={index} color="rgba(88, 66, 200, 0.5)" hasClose>{tag}</Badge>
-                  ))}
-                  {tags.length > 3 && <Badge color="#3F3F3F">+{tags.length - 3}</Badge>}
-                  {tags.length <= 3 && <Badge color="#3F3F3F">+1</Badge>}
-                </div>
-                <div className="flex items-center py-1">
+                <FieldRow icon={<Icons.Tag />} label="Tags">
+                  <div className="flex items-center gap-1">
+                    {tags.slice(0, 3).map((tag, index) => (
+                      <Badge 
+                        key={index} 
+                        color="rgba(88, 66, 200, 0.5)" 
+                        hasClose
+                        onClose={() => {
+                          setTags(prevTags => prevTags.filter((_, i) => i !== index));
+                        }}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                    {tags.length > 3 && <Badge color="#3F3F3F">+{tags.length - 3}</Badge>}
+                  </div>
+                </FieldRow>
+                <FieldRow icon={<Icons.Flag />} label="Priority">
                   <Badge color="#FF4B59">
                     <Icons.FlagWhite />
-                    <span className="ml-1">{company.priority || 'Urgent'}</span>
+                    <span style={{ marginLeft: '2px' }}>{company.priority || 'Urgent'}</span>
                   </Badge>
-                </div>
+                </FieldRow>
               </div>
             </div>
 
@@ -521,33 +932,31 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
             <div className="flex gap-1 ml-2">
               {/* Labels */}
               <div className="flex flex-col gap-2.5">
-                <FieldRow icon={<Icons.Call />} label="Phone" />
-                <FieldRow icon={<Icons.Email />} label="Email" />
-                <FieldRow icon={<Icons.Users />} label="Assignees" />
-              </div>
-              {/* Values */}
-              <div className="flex flex-col gap-2.5 pl-2">
-                <div className="flex items-center gap-1 py-1">
-                  <div
-                    className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-md"
-                    style={{ background: '#0C2D25' }}
-                  >
-                    <Icons.ArrowDownGray />
-                    <span style={{ ...textStyle, color: '#FFFFFF' }}>+964</span>
-                    <div style={{ width: 1, height: 12, background: 'rgba(30, 30, 30, 0.5)' }} />
-                    <span style={{ ...textStyle, color: '#FFFFFF' }}>{company.phone || '770 330 620 94'}</span>
+                <FieldRow icon={<Icons.Call />} label="Phone">
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-md"
+                      style={{ background: '#0C2D25' }}
+                    >
+                      <Icons.ArrowDownGray />
+                      <span style={{ ...textStyle, color: '#FFFFFF', whiteSpace: 'nowrap' }}>+964</span>
+                      <div style={{ width: 1, height: 12, background: 'rgba(30, 30, 30, 0.5)' }} />
+                      <span style={{ ...textStyle, color: '#FFFFFF', whiteSpace: 'nowrap' }}>{company.phone || '770 330 620 94'}</span>
+                    </div>
+                    <div className="flex items-center justify-center w-6 h-6 rounded-lg">
+                      <Icons.Messages />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-lg">
-                    <Icons.Messages />
-                  </div>
-                </div>
-                <div className="flex items-center py-1">
+                </FieldRow>
+                <FieldRow icon={<Icons.Email />} label="Email">
                   <Badge color="#5842C8">{company.email || 'Support@vodex.tech'}</Badge>
-                </div>
-                <div className="flex items-center gap-1 py-1">
-                  <Avatar initials={company.assignee?.initials || 'AR'} showStatus />
-                  <span style={{ ...textStyle, color: '#999999' }}>{company.assignee?.name || 'Support'}</span>
-                </div>
+                </FieldRow>
+                <FieldRow icon={<Icons.Users />} label="Assignees">
+                  <div className="flex items-center gap-1">
+                    <Avatar initials={company.assignee?.initials || 'AR'} showStatus />
+                    <span style={{ ...textStyle, color: '#999999' }}>{company.assignee?.name || 'Support'}</span>
+                  </div>
+                </FieldRow>
               </div>
             </div>
           </div>
@@ -559,16 +968,102 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
             {/* Left Section */}
             <div className="flex gap-1">
               <div className="flex flex-col gap-2.5">
-                <FieldRow icon={<Icons.Building />} label="Type" />
-                <FieldRow icon={<Icons.Link />} label="Website" />
-              </div>
-              <div className="flex flex-col gap-2.5 pl-2">
-                <div className="flex items-center py-1">
-                  <Badge color="#676767" hasArrow>{company.type || 'Big Company'}</Badge>
+                <div className="relative">
+                  <FieldRow icon={<Icons.Building />} label="Type">
+                    <button
+                      data-type-button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsTypeMenuOpen(!isTypeMenuOpen);
+                      }}
+                      className="cursor-pointer"
+                      type="button"
+                    >
+                      <Badge color="#676767" hasArrow>{currentType}</Badge>
+                    </button>
+                  </FieldRow>
+                  {isTypeMenuOpen && (
+                    <div
+                      data-type-menu
+                      className="absolute top-full left-0 mt-1 z-50"
+                      style={{
+                        width: '180px',
+                        background: '#000000',
+                        border: '1px solid #2B2B2B',
+                        borderRadius: '8px',
+                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.4)',
+                        overflow: 'hidden',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {typeOptions.map((option, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentType(option);
+                            setIsTypeMenuOpen(false);
+                          }}
+                          className="w-full flex items-center px-3 py-2 hover:bg-[#2B2B2B] transition-colors"
+                          style={{
+                            gap: '8px',
+                            borderBottom: index < typeOptions.length - 1 ? '1px solid #2B2B2B' : 'none'
+                          }}
+                          type="button"
+                        >
+                          <span
+                            style={{
+                              fontFamily: 'SF Pro',
+                              fontWeight: 510,
+                              fontSize: '12px',
+                              lineHeight: '16px',
+                              color: '#FBFBFB'
+                            }}
+                          >
+                            {option}
+                          </span>
+                        </button>
+                      ))}
+                      <div
+                        style={{
+                          borderTop: '1px solid #2B2B2B',
+                          padding: '8px',
+                          background: '#141414'
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={newTypeValue}
+                            onChange={(e) => setNewTypeValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && newTypeValue.trim()) {
+                                if (!typeOptions.includes(newTypeValue.trim())) {
+                                  setTypeOptions([...typeOptions, newTypeValue.trim()]);
+                                }
+                                setCurrentType(newTypeValue.trim());
+                                setNewTypeValue('');
+                                setIsTypeMenuOpen(false);
+                              }
+                            }}
+                            placeholder="Add new type..."
+                            className="flex-1 px-2 py-1 rounded"
+                            style={{
+                              background: '#2B2B2B',
+                              border: '1px solid #3B3B3B',
+                              color: '#FFFFFF',
+                              fontSize: '12px',
+                              fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center py-1">
+                <FieldRow icon={<Icons.Link />} label="Website">
                   <Badge color="rgba(0, 109, 230, 0.5)" hasClose>{company.website || 'www.ecotrend.com'}</Badge>
-                </div>
+                </FieldRow>
               </div>
             </div>
 
@@ -659,75 +1154,80 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, isOpen, onClos
           </div>
 
           {/* Projects Table */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ background: '#141414', border: '1px solid #2B2B2B' }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleProjectDragEnd}
           >
-            {/* Table Header */}
-            <div className="flex" style={{ background: '#2B2B2B' }}>
-              <div className="w-[20px] py-3 px-5" />
-              <div className="w-[126px] py-3 px-1">
-                <span style={{ ...textStyle, color: '#FBFBFB' }}>Projects</span>
-              </div>
-              <div className="w-[94px] py-3 px-1 text-center">
-                <span style={{ ...textStyle, color: '#FBFBFB' }}>States</span>
-              </div>
-              <div className="w-[99px] py-3 px-1 text-center">
-                <span style={{ ...textStyle, color: '#FBFBFB' }}>Total Amount</span>
-              </div>
-              <div className="w-[172px] py-3 px-1">
-                <span style={{ ...textStyle, color: '#FBFBFB' }}>Start → End</span>
-              </div>
-              <div className="w-[57px] py-3 px-1">
-                <span style={{ ...textStyle, color: '#FBFBFB' }}>Actions</span>
-              </div>
-            </div>
-
-            {/* Table Rows */}
-            {projects.map((project, index) => (
-              <div
-                key={project.id}
-                className="flex items-center"
-                style={{ borderBottom: index < projects.length - 1 ? '1px solid #2B2B2B' : 'none' }}
-              >
-                <div className="w-[20px] py-3 px-5 flex justify-center">
-                  <Icons.MoreHorizontal />
-                </div>
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ background: '#141414', border: '1px solid #2B2B2B' }}
+            >
+              {/* Table Header */}
+              <div className="flex" style={{ background: '#2B2B2B' }}>
+                <div className="w-[20px] py-3 px-5" />
                 <div className="w-[126px] py-3 px-1">
-                  <div className="flex items-center gap-1">
-                    <div
-                      className="w-4 h-4 rounded overflow-hidden flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, #2d5a3d 0%, #1a3a25 100%)' }}
-                    >
-                      <span className="text-[8px]">🌿</span>
-                    </div>
-                    <span style={{ ...textStyle, color: '#999999' }}>{project.name}</span>
-                  </div>
+                  <span style={{ ...textStyle, color: '#FBFBFB' }}>Projects</span>
                 </div>
-                <div className="w-[94px] py-3 px-1 flex justify-center">
-                  <Badge color="#DC6300" hasArrow>{project.state}</Badge>
+                <div className="w-[94px] py-3 px-1 text-center">
+                  <span style={{ ...textStyle, color: '#FBFBFB' }}>States</span>
                 </div>
                 <div className="w-[99px] py-3 px-1 text-center">
-                  <span style={{ ...textStyle, color: '#999999' }}>{project.totalAmount}</span>
+                  <span style={{ ...textStyle, color: '#FBFBFB' }}>Total Amount</span>
                 </div>
                 <div className="w-[172px] py-3 px-1">
-                  <span style={{ ...textStyle, color: '#999999' }}>{project.startDate} → {project.endDate}</span>
+                  <span style={{ ...textStyle, color: '#FBFBFB' }}>Start → End</span>
                 </div>
-                <div className="w-[57px] py-3 px-1 flex justify-center">
-                  <Icons.More />
+                <div className="w-[57px] py-3 px-1">
+                  <span style={{ ...textStyle, color: '#FBFBFB' }}>Actions</span>
                 </div>
               </div>
-            ))}
 
-            {/* Add New Row */}
-            <div className="py-3 px-5">
-              <button type="button" style={{ ...textStyle, color: '#999999', cursor: 'pointer', background: 'none', border: 'none' }}>
-                Add new+
-              </button>
+              {/* Table Rows */}
+              <SortableContext items={projectsList.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                {projectsList.map((project, index) => (
+                  <SortableProjectRow
+                    key={project.id}
+                    project={project}
+                    index={index}
+                    totalProjects={projectsList.length}
+                    onUpdateState={(projectId, newState) => {
+                      setProjectsList(prevProjects =>
+                        prevProjects.map(p =>
+                          p.id === projectId ? { ...p, state: newState } : p
+                        )
+                      );
+                    }}
+                  />
+                ))}
+              </SortableContext>
+
+              {/* Add New Row */}
+              <div className="py-3 px-5">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddProjectDialogOpen(true)}
+                  style={{ ...textStyle, color: '#999999', cursor: 'pointer', background: 'none', border: 'none' }}
+                >
+                  Add new+
+                </button>
+              </div>
             </div>
-          </div>
+          </DndContext>
         </div>
       </div>
+
+      <AddProjectDialog
+        isOpen={isAddProjectDialogOpen}
+        onClose={() => setIsAddProjectDialogOpen(false)}
+        onAdd={(project) => {
+          const newProject = {
+            ...project,
+            id: Date.now().toString(),
+          };
+          setProjectsList(prev => [...prev, newProject]);
+        }}
+      />
     </>
   );
 };

@@ -1,22 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { loginAsync, clearError } from '@/store/authSlice'
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@vodex.tech')
-  const [password, setPassword] = useState('Code2020')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const dispatch = useAppDispatch()
+  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth)
+  const hasRedirectedRef = useRef(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isAuthenticated && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, router])
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt:', { email, password, rememberMe })
+    dispatch(clearError())
     
-    // Temporary: Navigate to dashboard
-    router.push('/dashboard')
+    const result = await dispatch(loginAsync({ email, password, rememberMe }))
+    
+    if (loginAsync.fulfilled.match(result) && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true
+      router.replace('/dashboard')
+    }
   }
 
   return (
@@ -145,7 +166,7 @@ export default function Login() {
                   margin: 0,
                   transition: 'all 0.3s ease'
                 }}
-                placeholder="admin@vodex.tech"
+                placeholder="Enter your email"
                 required
               />
             </div>
@@ -208,7 +229,7 @@ export default function Login() {
                     margin: 0,
                     transition: 'all 0.3s ease'
                   }}
-                  placeholder="Code2020"
+                  placeholder="Enter your password"
                   required
                 />
                 <button
@@ -366,23 +387,48 @@ export default function Login() {
               </a>
             </div>
 
+            {error && (
+              <div
+                style={{
+                  width: '350px',
+                  padding: '8px 12px',
+                  background: '#7F1D1D',
+                  border: '1px solid #991B1B',
+                  borderRadius: '8px',
+                  fontFamily: 'SF Pro, -apple-system, BlinkMacSystemFont, sans-serif',
+                  fontStyle: 'normal',
+                  fontWeight: 510,
+                  fontSize: '12px',
+                  lineHeight: '16px',
+                  color: '#FCA5A5',
+                  margin: 0,
+                }}
+              >
+                {error}
+              </div>
+            )}
+
             {/* Sign In Button */}
             <button
               type="submit"
+              disabled={isLoading}
               className="sign-in-button flex flex-row justify-center items-center"
               style={{
                 width: '350px',
                 height: '34px',
                 padding: '7.21px 12px 7.79px',
-                background: 'linear-gradient(269.46deg, #059BFD 0%, #006BE5 100%)',
+                background: isLoading
+                  ? '#3a3a3f'
+                  : 'linear-gradient(269.46deg, #059BFD 0%, #006BE5 100%)',
                 boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
                 borderRadius: '8px',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
                 margin: 0,
                 position: 'relative',
                 overflow: 'hidden',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                opacity: isLoading ? 0.6 : 1,
               }}
             >
               <span
@@ -403,7 +449,7 @@ export default function Login() {
                   zIndex: 1
                 }}
               >
-                Sign In
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </span>
             </button>
           </form>
